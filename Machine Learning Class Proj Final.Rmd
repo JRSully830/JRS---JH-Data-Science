@@ -1,0 +1,153 @@
+---
+title: "Machine Learning Class Project"
+author: "John R Sullivan"
+date: "November 11, 2017"
+output: html_document
+---
+
+```{R,echo=FALSE}
+##knitr::opts_chunk$set(echo = FALSE)
+```
+# Executive Summary
+This assignment was focused on using workout related data to develop a predictive model. The goal was to use provided data from a large dataset (18K+ observations) to predict how effectively individuals were executing prescribed exercises. 
+
+There were 5 possible outcomes varying from a very effective exercise execution to several ineffective ones (A-E, respectively). The original training and test files were transformed from 160 to 56 fields by removing primarily blank fields and variables that were logically duplicated in the data.
+
+Principal component analysis (PCA) was then applied, further reducing the number of acting variables. A classification tree model with cross validation was trained subsequently, yielding a prediction on the training data set approaching 66.5% overall accuracy. 
+
+The resultant tree model was applied to the 20 observation test data after a PCA transformation based on the training data. The predicted outcomes on the test data were tabled for submission to fulfill the test prediction component of the class exercise.
+
+
+```{r setup,echo=FALSE}
+rm(list=ls())
+require(RCurl)
+require(caret)
+require(rpart)
+require(dplyr)
+require(tidyverse)
+
+url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+wldataTr <- getURL(url)
+wliftTr <- read.csv(textConnection(wldataTr),stringsAsFactors=FALSE)
+
+url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+wldataTst <- getURL(url)
+wliftTst <- read.csv(textConnection(wldataTst),stringsAsFactors=FALSE)
+
+num_nas <-sapply(wliftTr,function(y) sum(length(which(is.na(y)))+sum(length(which(y=="")))))
+
+```
+# Histogram of exercise effectiveness categories
+
+```{R Histogram, echo=FALSE}
+
+wliftTr$classe <- as.factor(wliftTr$classe)
+histogram(wliftTr$classe,main="Distribution of Exercise Effectiveness")
+
+```
+```{R, echo=FALSE}
+
+```
+# Process Description
+
+Split Training dataset randomly by classe into training (70% of data)/ verification (30% of data) sets.
+
+Training 70% file (13,737 observations):
+- Filtered out predictors populated less than 50% of the time in data. This moved the file from 160 to 60 predictors.
+- Eliminated identification attributes (user_name, row_number) and raw timestamp variables, since they redundant or not relevant to exercise data, reducing columns to 56
+- Used caret preprocess features to scale, center remaining data. 
+- Applied caret based Principal Component Analysis (PCA) to consolidate remaining variables. This reduced acting predictors to 25 Principal Components.
+- Due to shear size of 70% training file (13K+ observations)and number of possible outcomes, applied a classification tree model (rpart) against Principal Components  to predict training set outcomes. Incorporated 20/10 cross-validation into the control parameters for the tree calculations.
+Post prediction Confusion Matrix showed 66.5% overall accuracy of predictions.
+
+```{R Training Set split,echo=FALSE}
+wliftTr$classe <- as.character(wliftTr$classe)
+
+## Eliminate columns with less than or  equal to 50% population
+wliftTrCln <- wliftTr[, -which(colMeans(is.na(wliftTr)) > 0.5)]
+wliftTrCln <- wliftTrCln[, -which(colMeans(wliftTrCln[,1:ncol(wliftTrCln)]=="") > 0.5)]
+
+wliftTrCln <- wliftTrCln[,c(-1,-2,-3,-4)]
+
+##colnames(wliftTr)
+set.seed(341)
+intrain <- createDataPartition(y = wliftTrCln$classe, p= 0.7, list = FALSE)
+wliftTrA <- wliftTrCln[intrain,]
+wliftTrB <- wliftTrCln[-intrain,]
+
+#set.seed(341)
+#wliftPCA <- preProcess(wliftTrCln[,-56],method=c("center","scale","pca"))
+
+## center scale and calculate principal components for 70% test file
+#set.seed(341)
+wliftPCA1 <- preProcess(wliftTrA[,-56],method=c("center","scale","pca"))
+
+#wliftPC <- predict(wliftPCA,wliftTrCln)
+
+wliftPCP1 <- predict(wliftPCA1,wliftTrA)
+
+fitControl <- trainControl(method = "repeatedcv",
+                           number = 20,
+                           repeats = 10) 
+
+## Classification tree with cross validation
+tree2 <- train (classe~.,
+               wliftPCP1, 
+               method = "rpart",
+               trControl = fitControl) ##,
+
+tree2pred <- predict(tree2,wliftPCP1) 
+confusionMatrix(wliftPCP1$classe,predict(tree2,wliftPCP1))
+
+
+```
+#Process Description (continued)
+Verification 30% file (5885 observations):
+- Preprocessed file identically to 70% training file
+- Used 70% Training set PCA based rpart model with cross-validation to predict verification file outcomes
+- Confusion matrix approached 66.4% overall predictive accuracy
+
+```{R Verification File, echo=FALSE}
+
+### Verify part 2 - verification file (30% of training data)
+
+Trn2PC <- predict(wliftPCA1,wliftTrB)
+
+TrainPred2 <- predict(tree2,Trn2PC) 
+
+confusionMatrix(wliftTrB$classe,predict(tree2,Trn2PC))
+
+```
+#Process Description (continued)
+Test file Prediction (20 observations):
+- Preprocessed test file identically to 70% training file
+- Used 70% Training set PCA based rpart model with cross-validation to predict test file outcomes
+- Since actual outcomes are not available, represented each of 20 predictions in a table and summary totals
+```{R Test Data Prediction, echo=FALSE}
+
+### Test Data File prediction
+
+TestCln <- wliftTst[, -which(colMeans(is.na(wliftTst)) > 0.5)]
+
+TestCln <- TestCln[,c(-1,-2,-3,-4)]
+TestPC <- predict(wliftPCA1,TestCln)
+
+TestPred <- predict(tree2,TestPC) 
+
+### table results
+table(TestPC$problem_id,TestPred)
+summary(TestPred)
+
+```
+# Conclusions
+- Large original test file with many NA values represented a challenge to modeling requiring significant data transformation
+- Even with NA reductions, 56 remaining predictors was a large number to model for prediction
+- The large file did allow for a split into a 70% test file and additional prediction validation file which assisted with judging the accuracy of out of sample predictions
+- Principal Component Analysis allowed for the reduction of predictor variables almost 50% to 25 PC's.
+- While the number of outcomes (5) seemed to preclude logistic regression and the volume of data would not resolve using random forest approaches, a classification tree with cross-validation against the PC's yielded predictions on the test and validation sets approaching 67% accuracy
+- My expectation is that the prediction accuracy on the 20 observation test file fell in a similar range to the test and validation file results
+
+```{R, echo=FALSE}
+
+## The End
+```
