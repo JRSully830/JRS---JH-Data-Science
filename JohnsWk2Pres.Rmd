@@ -1,0 +1,50 @@
+---
+title: "John's first R-Markdown presentation"
+author: "John R Sullivan"
+date: "December 2, 2017"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+### High level sub heading
+#### Lower Level subheading
+
+- Bullet one
+- Bullet two
+- Bullet two and a 1/2
+
+1. Numbered item A
+2. Numbered Item B
+
+## Slide with R Output
+
+```{r cars, echo = TRUE,comment="",warning=FALSE,message=FALSE}
+library(tidyverse)
+summary(cars)
+head(cars)
+
+```
+
+## Including a figure 
+
+```{r hidden figures, echo = FALSE,comment="",fig.cap="My caption"}
+plot(cars$speed,cars$dist,main="My cars plot",xlab="speed",ylab="dist")
+
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
