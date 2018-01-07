@@ -1,0 +1,25 @@
+---
+title: "Developing Data Products - Week 3 Assignment"
+author: "John R Sullivan"
+date: "January 6, 2018"
+output: ioslides_presentation
+---
+
+## Data Products Plotly Graph
+This assignment will present a plotly graph based on the well-known cars data file 
+
+
+## Graph of cars data comparing cylinders to mpg and number of gears
+```{R CARS, echo = FALSE,warning=FALSE,message=FALSE}
+library(plotly)
+      cars=mtcars
+      cars$gear <- as.factor(cars$gear)
+      cars$am <- as.factor(cars$am)
+      cars$cyl <- as.factor(cars$cyl)
+      plot_ly(cars,x=~cyl,y=~mpg,color=~gear,name="Gear",mode='markers',type='scatter')
+      
+
+
+
+
+
