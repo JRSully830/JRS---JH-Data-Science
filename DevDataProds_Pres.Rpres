@@ -1,8 +1,9 @@
 Iris Species Prediction Tool Presentation
 ========================================================
 author: John Sullivan
-date: 01/22/2018
-autosize: true
+date: 01/25/2018
+width: 1440
+height: 900
 
 The Amazing Iris Flower Species Prediction Application
 ========================================================
@@ -44,7 +45,10 @@ The comparison of predictions from differing models represented in the bar graph
 can provide interesting insights into model predictive differences...even offering
 insights on Irises with attribute combinations unlikely to occur in nature.
 
-### Github link to server/UI R docs: 
+### GitHub link to server/UI R docs and presentation:
+<a href="https://github.com/JRSully830/JRS---JH-Data-Science/commit/933b495c40140c3db73f2912d612b94a9fd2b14d" target="_top"/>Shiny UI and Server Files on Github</a>
+
+
 
 Iris Species Prediction App - Original Iris File Stats
 ========================================================
@@ -53,10 +57,14 @@ library(datasets);library(dplyr);library(reshape);data(iris)
 ```
 ```{r,echo=FALSE}
 irissum<- (iris) %>%
-      group_by(Species) %>% summarize(Avg_SepLng = mean(Sepal.Length),
-      Avg_SepWth = mean(Sepal.Width),Avg_PetLng = mean(Petal.Length),
-      Avg_PetWth = mean(Petal.Width),Median_SepLng = median(Sepal.Length),
-      Median_SepWth = median(Sepal.Width),Median_PetLng = median(Petal.Length),
+      group_by(Species) %>% 
+      summarize(Avg_SepLng = mean(Sepal.Length),
+                Avg_SepWth = mean(Sepal.Width),
+                Avg_PetLng = mean(Petal.Length),
+                Avg_PetWth = mean(Petal.Width),
+                Median_SepLng = median(Sepal.Length),
+                Median_SepWth = median(Sepal.Width),
+                Median_PetLng = median(Petal.Length),
                 Median_PetWth = median(Petal.Width))
 ```
 ```{r}
